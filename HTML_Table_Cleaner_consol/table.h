@@ -13,6 +13,7 @@ public:
 	bool ReadTableFromBuffer();
 	bool ReadTableFromFile();
 	void CleanTable();
+	void CleanHTML();
 	void SaveTable();
 	void PrintTable();
 

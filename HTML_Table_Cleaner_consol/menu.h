@@ -6,11 +6,11 @@ public:
 	Menu() {};
 	~Menu() {};
 
-	bool MainMenu();
-	bool ReadMenu();
+	int MainMenu();
+	int CleanMenu();
 	bool PrintMenu();
 	bool SaveMenu();
 
 private:
-	void WrongInput() { std::cout << "Wrong input, try again!" << std::endl; }
+	void WrongInput(const char &input) { std::cout << "Wrong input - '" << input << "'. Please, try again!" << std::endl; }
 };

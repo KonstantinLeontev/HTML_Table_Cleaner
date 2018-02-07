@@ -3,21 +3,34 @@
 
 bool Table::ReadTableFromBuffer() {
 	while (1) {
-		std::cout << "Past table from buffer here or press 'Q' to quit: ";
+		std::cout << "\nPast table from buffer here or press 'Q' to quit or 'S' to stop input: ";
 		// first getline eats a newline character from menu
 		std::getline(std::cin, m_Table);
-		std::getline(std::cin, m_Table);
-		if (m_Table.find("<table") != std::string::npos) {
-			std::cout << "Reading has done!" << std::endl;
-			return true;
+		std::string temp;
+		while (std::getline(std::cin, temp) && temp != "s" && temp != "S" && temp != "q" && temp != "Q") {
+			m_Table.append(temp);
+			m_Table.push_back('\n');
 		}
-		else if (m_Table == "Q" || m_Table == "q") {
+		// If loop was stopped by 'S'
+		if (temp == "S" || temp == "s") {
+			if (m_Table.find("<table") != std::string::npos) {
+				std::cout << "Reading is complete!" << std::endl;
+				return true;
+			}
+			else {
+				std::cout << "There's no any tables here. Please try again!" << std::endl;
+				// Clear all previous 
+				m_Table.clear();
+			}
+		}
+		// Otherwise it was quit command 'Q'
+		else {
 			std::cout << "Reading was cancelled!" << std::endl;
+			// Return to main menu
+			// There is no need to clear input because of object deleting in main loop 
 			return false;
 		}
-		else {
-			std::cout << "There's no any tables here. Please try again!" << std::endl;
-		}
+		
 	}
 }
 
@@ -27,7 +40,7 @@ bool Table::ReadTableFromFile() {
 	// Open file dialog loop
 	while (1) {
 		// Input a file name
-		std::cout << "Input a file name to open or 'Q' to quit: ";
+		std::cout << "\nInput a file name to open or 'Q' to quit: ";
 		std::cin >> fileName;
 		// If it's not a quit command
 		if (fileName != "Q" && fileName != "q") {
@@ -41,7 +54,9 @@ bool Table::ReadTableFromFile() {
 					m_Table += tempStr;
 					m_Table.push_back('\n');
 				}
-				std::cout << "Reading has done!" << std::endl;
+				std::cout << "Reading is complete!" << std::endl;
+				// Close the file
+				inputFile.close();
 				return true;
 			}
 			// Otherwise print an error message
@@ -79,7 +94,7 @@ void Table::TagRemove(const std::string &str) {
 		// If there is one
 		if (pos2 != std::string::npos) {
 			// Erase all from '<' to '>'
-			m_Table.erase(pos, (pos2 - pos));
+			m_Table.erase(pos, (pos2 - pos + 1));
 			// Increase counter for message
 			cnt++;
 		}
@@ -94,9 +109,8 @@ void Table::TagRemove(const std::string &str) {
 	std::cout << cnt << ' ' << str << "> tags was removed!" << std::endl;
 	// Erase close tags
 	cnt = 0;
-	;
 	while ((pos = m_Table.find(closeTag)) != std::string::npos) {
-		m_Table.erase(pos, closeTagSize);
+		m_Table.erase(pos, closeTagSize + 1);
 		cnt++;
 	}
 	std::cout << cnt << ' ' << closeTag << "> tags was removed!" << std::endl;
@@ -180,6 +194,8 @@ void Table::EraseNoTable() {
 }
 
 void Table::CleanTable() {
+	// Add a line before output
+	std::cout << '\n';
 	// Clear all staff befor and after the table
 	EraseNoTable();
 
@@ -192,16 +208,38 @@ void Table::CleanTable() {
 		TagClean(tagForClean[i]);
 		TagRemove(tagForRemove[i]);
 	}
+}
 
-	// Remove <p> tag
-	TagRemove("<p");
+void Table::CleanHTML() {
+	std::string tags[] = { "<p", "<div", "<h" };
+
+	std::cout << '\n';
+	for (int i = 0; i < 3; i++) {
+		TagRemove(tags[i]);
+	}
 }
 
 void Table::PrintTable() {
-	std::cout << "--- NEW TABLE ---" << std::endl;
+	std::cout << "\n--------- NEW TABLE ---------\n\n";
 	std::cout << m_Table << std::endl;
 }
 
 void Table::SaveTable() {
+	std::ofstream outputFile;
+	std::string fileName;
 
+	std::cout << "\nThe name of the file to output: ";
+	std::cin >> fileName;
+	// Open or create a file
+	outputFile.open(fileName, std::ios::in | std::ios::trunc);
+	// If file was open
+	if (outputFile.is_open()) {
+		outputFile << m_Table;
+		outputFile.close();
+		std::cout << "Writing to file complete!" << std::endl;
+	}
+	// Otherwise show the error message
+	else {
+		std::cout << "\nCannot open the file!" << std::endl;
+	}
 }

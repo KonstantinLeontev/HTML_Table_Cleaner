@@ -1,38 +1,35 @@
 #pragma once
-#include <iostream>
-#include <fstream>
-#include <string>
 #include "menu.h"
 #include "table.h"
 
 int main() {
 	// Create UI object
 	Menu menu;
+	int choice(1);
 	bool flag;
 
-	// Main loop
-	while (menu.MainMenu()) {
+	// Main menu loop
+	while (choice = menu.MainMenu()) {
 		// Create a table object
 		Table table;
 		// Read a table
-		if (menu.ReadMenu()) {
-			flag = table.ReadTableFromBuffer();
+		switch (choice) {
+		case 1: flag = table.ReadTableFromFile(); break;
+		case 2: flag = table.ReadTableFromBuffer(); break;
 		}
-		else {
-			flag = table.ReadTableFromFile();
-		}
+		// If not quit
 		if (flag) {
-			// Clean the table up
-			table.CleanTable();
-			// Output the result table on the screen
-			if (menu.PrintMenu()) {
-				table.PrintTable();
-			}
-			// Save the table out
-			if (menu.SaveMenu()) {
-				table.SaveTable();
+			// Clean menu loop
+			while (choice = menu.CleanMenu()) {
+				switch (choice) {
+				case 1: table.CleanTable(); break;
+				case 2: table.CleanHTML(); break;
+				case 3: table.PrintTable(); break;
+				case 4: table.SaveTable(); break;
+				}
 			}
 		}
+		// Otherwise return to main menu
 	}
 
 	return 0;
