@@ -10,7 +10,7 @@ int main() {
 
 	// Main menu loop
 	while (choice = menu.MainMenu()) {
-		// Create a table object
+		// Create a table object to keep all related stuff
 		Table table;
 		// Read a table
 		switch (choice) {
