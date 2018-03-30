@@ -12,6 +12,11 @@
 !*.vcxproj
 !*.sln
 
+# unignore resource files
+!*.rc
+!*.ico
+!*.aps
+
 # reinclude readme file
 !README
 
