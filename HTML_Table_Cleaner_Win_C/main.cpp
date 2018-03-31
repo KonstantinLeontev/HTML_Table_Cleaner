@@ -1,13 +1,17 @@
 #include <windows.h>
+#include "resource.h"
 
 // Menu symbols.
 #define ID_FILE_EXIT 9001
-#define ID_STUFF_GO 9002
+#define ID_HELP_ABOUT 9002
 
 const char g_szClassName[] = "myWindowClass";
 
 // Window procedure declaration.
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+// Dialog box procedure declaration.
+BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	WNDCLASSEX wc;
@@ -61,8 +65,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 // Window procedure definition.
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
-	case WM_CREATE:
-	{
+		// Sent when an application requested that a window be created by calling CreateWindow().
+	case WM_CREATE: {
 		HMENU hMenu, hSubMenu;
 		HICON hIcon, hIconSm;
 
@@ -79,8 +83,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
 
 		hSubMenu = CreatePopupMenu();
-		AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
-		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
+		AppendMenu(hSubMenu, MF_STRING, ID_HELP_ABOUT, "&About");
+		AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Help");
 
 		SetMenu(hwnd, hMenu);
 
@@ -103,15 +107,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 		break;
-	case WM_LBUTTONDOWN:
-		// Show the path of our programm.
-	{
-		char szFileName[MAX_PATH];
-		// Get handle to current programm.
-		HINSTANCE hInstance = GetModuleHandle(NULL);
-
-		GetModuleFileName(hInstance, szFileName, MAX_PATH);
-		MessageBox(hwnd, szFileName, "This program is: ", MB_OK | MB_ICONINFORMATION);
+		// Sent when the user selects a command item from a menu.
+	case WM_COMMAND: {
+		switch (LOWORD(wParam)) {
+		case ID_FILE_EXIT:
+			PostMessage(hwnd, WM_CLOSE, 0, 0);
+			break;
+		case ID_HELP_ABOUT:
+			int ret = DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
+			if (ret == -1) {
+				MessageBox(hwnd, "Dialog failed!", "Error", MB_OK | MB_ICONINFORMATION);
+			}
+			break;
+		}
+	}
+		// Case for learning purposes for a while.
+	case WM_LBUTTONDOWN:{
+		// Empty for now.
 	}
 		break;
 	case WM_CLOSE: 
@@ -124,4 +136,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 	return 0;
+}
+
+// Dialog box procedure definition.
+BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+		// Handle all processing that needs to be done before the dialog appears.
+		case WM_INITDIALOG: return TRUE;
+		case WM_COMMAND:
+			switch (LOWORD(wParam)) {
+				case IDOK:
+					EndDialog(hwnd, IDOK);
+					break;
+			}
+			break;
+		default: return FALSE;
+	}
+	return TRUE;
 }
