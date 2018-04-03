@@ -22,3 +22,6 @@
 
 # reinclude .gitignore
 !.gitignore
+
+# ignore example folder
+HTML_Table_Cleaner_Win_C/ExampleCode/
