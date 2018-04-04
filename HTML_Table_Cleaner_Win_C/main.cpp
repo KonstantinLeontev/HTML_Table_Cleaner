@@ -15,6 +15,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Dialog box procedure declaration.
 BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// Function to read a text file.
+BOOL LoadTextFileToEdit(HWND hEdit, LPCTSTR pszFileName);
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	WNDCLASSEX wc;
 	HWND hwnd;
@@ -241,4 +244,45 @@ BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		default: return FALSE;
 	}
 	return TRUE;
+}
+
+// Function to read a text file.
+BOOL LoadTextFileToEdit(HWND hEdit, LPCTSTR pszFileName) {
+	HANDLE hFile;
+	BOOL bSuccess = FALSE;
+
+	hFile = CreateFile(
+		pszFileName, // The name of the file or device to be created or opened.
+		GENERIC_READ, // Requested access to the file.
+		FILE_SHARE_READ, // Requested sharing mode.
+		NULL, // A pointer to a SECURITY_ATTRIBUTES structure.
+		OPEN_EXISTING, // An action to take on a file or device that exists or does not exist.
+		0, // The file attributes and flags.
+		NULL // Handle to a template file with the GENERIC_READ access right.
+	);
+
+	if (hFile != INVALID_HANDLE_VALUE) {
+		DWORD dwFileSize;
+
+		dwFileSize = GetFileSize(hFile, NULL);
+		if (dwFileSize != 0xFFFFFFFF) {
+			LPSTR pszFileText;
+
+			pszFileText = GlobalAlloc(GPTR, dwFileSize + 1);
+			if (pszFileText != NULL)
+			{
+				DWORD dwRead;
+
+				if (ReadFile(hFile, pszFileText, dwFileSize, &dwRead, NULL))
+				{
+					pszFileText[dwFileSize] = 0; // Add null terminator.
+					if (SetWindowText(hEdit, pszFileText))
+						bSuccess = TRUE;
+				}
+				GlobalFree(pszFileText);
+			}
+		}
+		CloseHandle(hFile);
+	}
+	return bSuccess;
 }
