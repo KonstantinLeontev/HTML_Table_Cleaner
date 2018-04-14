@@ -80,17 +80,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			MessageBox(hwnd, "Can't create main window menu. CreateMainWindowMenu() failed!", "Error", MB_OK | MB_ICONERROR);
 		}
 
+		// Create the main toolbar.
+		HWND hwndToolBar = CreateMainToolbar(hwnd);
+		if (!hwndToolBar) {
+			MessageBox(NULL, "CreateMainToolbar() failed!", "Error", MB_OK | MB_ICONERROR);
+		}
+
 		// Create main window edit text box.
 		HWND hwndEditBox = CreateMainEditBox(hwnd);
 		if (!hwndEditBox) {
 			MessageBox(hwnd, "Can't create main window edit box. CreateMainWindowEditBox() failed!", "Error", MB_OK | MB_ICONERROR);
 		}
 
-		// Create the main toolbar.
-		HWND hwndToolBar = CreateMainToolbar(hwnd);
-		if (!hwndToolBar) {
-			MessageBox(NULL, "CreateMainToolbar() failed!", "Error", MB_OK | MB_ICONERROR);
-		}
+		// Create the status bar.
+		HWND hwndStatus = CreateStatusBar(hwnd);
 	}
 		break;
 
@@ -120,12 +123,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 		
 		// Compute the size of the status bar.
-		// TODO...
+		hwndStatus = GetDlgItem(hwnd, IDC_MAIN_STATUS);
+		if (hwndStatus) {
+			SendMessage(hwndStatus, WM_SIZE, 0, 0);
+
+			GetWindowRect(hwndStatus, &rcStatus);
+			iStatusHeight = rcStatus.bottom - rcStatus.top;
+		}
 
 		// Calculate the size of the edit box.
 		// Retrieves a handle to a control in the specified dialog box.
 		hwndEdit = GetDlgItem(hwnd, IDC_MAIN_EDIT);
-		if (hwndEdit) {
+		if (hwndEdit && hwndStatus) {
 			// Retrieves the coordinate of a  main window's client area.
 			result = GetClientRect(hwnd, &rcClient);
 			if (!result) {
@@ -133,7 +142,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			}
 
 			// Calculate the height of edit area.
-			iEditHeight = rcClient.bottom - iToolHeight;
+			iEditHeight = rcClient.bottom - iToolHeight - iStatusHeight;
 
 			result = SetWindowPos(
 				hwndEdit, // Handle to the window.

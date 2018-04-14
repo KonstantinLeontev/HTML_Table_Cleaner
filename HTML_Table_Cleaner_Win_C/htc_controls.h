@@ -9,10 +9,11 @@
 #define IDM_FILE_SAVEAS 9002
 #define IDM_FILE_EXIT 9003
 #define IDM_HELP_ABOUT 9004
-// Text editor symbol.
-#define IDC_MAIN_EDIT 101
-// Main toolbar.
-#define IDC_MAIN_TOOL 102
+
+#define IDC_MAIN_EDIT 101 // Text editor symbol.
+#define IDC_MAIN_TOOL 102 // Main toolbar.
+#define IDC_MAIN_STATUS 103 // Main status bar.
+
 
 const char g_szClassName[] = "myWindowClass";
 
@@ -42,3 +43,6 @@ HWND CreateMainEditBox(HWND hwndParent);
 
 // Create the main toolbar.
 HWND CreateMainToolbar(HWND hwndParent);
+
+// Create the status bar.
+HWND CreateStatusBar(HWND hwndParent);

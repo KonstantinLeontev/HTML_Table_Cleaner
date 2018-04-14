@@ -334,3 +334,31 @@ HWND CreateMainToolbar(HWND hwndParent) {
 
 	return hwndToolbar;
 }
+
+HWND CreateStatusBar(HWND hwndParent) {
+	HWND hwndStatus{};
+
+	hwndStatus = CreateWindowEx(
+		0,
+		STATUSCLASSNAME, // Create status windows - display status information in a horizontal window.
+		NULL,
+		WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, // Last includes a sizing grip at the right end of the status bar.
+		0, 0, 0, 0,
+		hwndParent,
+		(HMENU)IDC_MAIN_STATUS,
+		GetModuleHandle(NULL),
+		NULL
+	);
+	if (!hwndStatus) {
+		MessageBox(NULL, "Could not create status bar handle!", "Error", MB_OK | MB_ICONERROR);
+		return NULL;
+	}
+
+	// The width of sections in the status bar. -1 = any remaining space.
+	int statWidth[] = { 100, -1 };
+
+	SendMessage(hwndStatus, SB_SETPARTS, sizeof(statWidth) / sizeof(int), (LPARAM)statWidth);
+	SendMessage(hwndStatus, SB_SETTEXT, 0, (LPARAM)"Some useful things will be here: ");
+
+	return hwndStatus;
+}
