@@ -10,7 +10,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	MSG Msg;
 
 	// Carries information used to load common control classes.
-	// LPINITCOMMONCONTROLSEX lpInitCtrls{};
 	INITCOMMONCONTROLSEX initCtrls{};
 	BOOL result;
 
@@ -82,7 +81,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 
 		// Create main window edit text box.
-		if (!CreateMainEditBox(hwnd)) {
+		HWND hwndEditBox = CreateMainEditBox(hwnd);
+		if (!hwndEditBox) {
 			MessageBox(hwnd, "Can't create main window edit box. CreateMainWindowEditBox() failed!", "Error", MB_OK | MB_ICONERROR);
 		}
 
@@ -96,31 +96,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	// Sent to a window after it's size has changed.
 	case WM_SIZE: {
+		HWND hwndToolbar{};
+		RECT rcToolbar{}; // Structure that defines the coordinate of the upper-left and lower-right corner.
+		int iToolHeight{};
+
+		HWND hwndStatus{};
+		RECT rcStatus{};
+		int iStatusHeight{};
+
 		HWND hwndEdit{};
-		RECT rcClient{}; // Structure that defines the coordinate of the upper-left and lower-right corner.
+		RECT rcClient{};
+		int iEditHeight{};
+
 		BOOL result{};
 
-		// Retrieves the coordinate of a  main window's client area.
-		result = GetClientRect(hwnd, &rcClient);
-		if (!result) {
-			MessageBox(hwnd, "Couldn't get the client area size.", "Error", MB_OK | MB_ICONERROR);
-		}
+		// Compute the size of the toolbar.
+		hwndToolbar = GetDlgItem(hwnd, IDC_MAIN_TOOL);
+		if (hwndToolbar) {
+			SendMessage(hwndToolbar, TB_AUTOSIZE, 0, 0);
 
+			GetWindowRect(hwndToolbar, &rcToolbar);
+			iToolHeight = rcToolbar.bottom - rcToolbar.top;
+		}
+		
+		// Compute the size of the status bar.
+		// TODO...
+
+		// Calculate the size of the edit box.
 		// Retrieves a handle to a control in the specified dialog box.
 		hwndEdit = GetDlgItem(hwnd, IDC_MAIN_EDIT);
+		if (hwndEdit) {
+			// Retrieves the coordinate of a  main window's client area.
+			result = GetClientRect(hwnd, &rcClient);
+			if (!result) {
+				MessageBox(hwnd, "Couldn't get the client area size.", "Error", MB_OK | MB_ICONERROR);
+			}
 
-		result = SetWindowPos(
-			hwndEdit, // Handle to the window.
-			NULL, // Handle to the window to precede the positioned window in the Z order.
-			0, // Position of the left side.
-			50, // Position of the top side.
-			rcClient.right - 200, // Width in pixels.
-			rcClient.bottom, // Height in pixels.
-			SWP_NOZORDER // The window sizing and position flag. This one retains the current Z order.
-		);
-		if (!result) {
-			MessageBox(hwnd, "Could not set editbox's position.\nSetWindowPos() was failed.", "Error", MB_OK | MB_ICONERROR);
-		}
+			// Calculate the height of edit area.
+			iEditHeight = rcClient.bottom - iToolHeight;
+
+			result = SetWindowPos(
+				hwndEdit, // Handle to the window.
+				NULL, // Handle to the window to precede the positioned window in the Z order.
+				0, // Position of the left side.
+				iToolHeight, // Position of the top side - it's just below the toolbar.
+				rcClient.right - 200, // Width in pixels.
+				iEditHeight, // Height in pixels.
+				SWP_NOZORDER // The window sizing and position flag. This one retains the current Z order.
+			);
+			if (!result) {
+				MessageBox(hwnd, "Could not set editbox's position.\nSetWindowPos() was failed.", "Error", MB_OK | MB_ICONERROR);
+			}
+		}	
 	}
 		break;
 

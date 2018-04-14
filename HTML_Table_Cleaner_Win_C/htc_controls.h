@@ -11,11 +11,10 @@
 #define IDM_HELP_ABOUT 9004
 // Text editor symbol.
 #define IDC_MAIN_EDIT 101
+// Main toolbar.
+#define IDC_MAIN_TOOL 102
 
 const char g_szClassName[] = "myWindowClass";
-
-// Handle to the image list for toolbar icons declaration.
-extern HIMAGELIST g_hImageList;
 
 // Window procedure declaration.
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -39,7 +38,7 @@ void DoFileSave(HWND hwnd);
 BOOL CreateMainWindowMenu(HWND hwndParent);
 
 // Create main window edit text box.
-BOOL CreateMainEditBox(HWND hwndParent);
+HWND CreateMainEditBox(HWND hwndParent);
 
 // Create the main toolbar.
 HWND CreateMainToolbar(HWND hwndParent);

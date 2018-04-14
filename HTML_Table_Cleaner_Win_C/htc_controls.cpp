@@ -1,8 +1,6 @@
 #pragma once
 #include "htc_controls.h"
 
-HIMAGELIST g_hImageList = NULL;
-
 // Function to read a text file.
 BOOL LoadTextFileToEdit(HWND hEdit, LPCTSTR pszFileName) {
 	HANDLE hFile;
@@ -216,7 +214,7 @@ BOOL CreateMainWindowMenu(HWND hwndParent) {
 }
 
 // Create main window edit text box.
-BOOL CreateMainEditBox(HWND hwndParent) {
+HWND CreateMainEditBox(HWND hwndParent) {
 	// Start the main editor window.
 	HWND hwndEdit;
 	LOGFONT lfDefault;
@@ -239,7 +237,7 @@ BOOL CreateMainEditBox(HWND hwndParent) {
 	);
 	if (hwndEdit == NULL) {
 		MessageBox(hwndParent, "Could not create edit box.", "Error", MB_OK | MB_ICONERROR);
-		return false;
+		return NULL;
 	}
 
 	// Get system font.
@@ -265,33 +263,26 @@ BOOL CreateMainEditBox(HWND hwndParent) {
 	}
 	else {
 		MessageBox(hwndParent, "Could not obtain the system metrics.", "Error", MB_OK | MB_ICONERROR);
-		return false;
+		return NULL;
 	}
-	return true;
+	return hwndEdit;
 }
 
 // Create the main toolbar.
 HWND CreateMainToolbar(HWND hwndParent) {
-	// Local constants.
-	const int ImageListID = 0;
-	const int numButtons = 3;
-	const int bitmapSize = 16;
-
-	const DWORD buttonStyles = BTNS_AUTOSIZE;
-
 	// Create the toolbar.
 	HWND hwndToolbar = CreateWindowEx(
 		0, // Extended window style (DWORD).
 		TOOLBARCLASSNAME, // Class name provided by the common control library (LPCTSTR).
 		NULL, // The window name (LPCTSTR).
-		WS_CHILD | TBSTYLE_WRAPABLE, // The style of the window being created (DWORD). Create the toolbar that
+		WS_CHILD | WS_VISIBLE, // The style of the window being created (DWORD). Create the toolbar that
 									 // can have multiple lines of buttons.
 		0, // The initial horizontal position of the window (int).
 		0, // The initial vertical position of the window (int).
 		0, // The width of the window in device units (int).
 		0, // The height of the window in device units (int).
 		hwndParent, // A handle to the parent window.
-		NULL, // A handle to a menu.
+		(HMENU)IDC_MAIN_TOOL, // A handle to a menu.
 		GetModuleHandle(NULL), // A handle to the instance of the module.
 		NULL // Pointer to a value to be passed to the window through the CREATESTRUCT structure.
 			 // NULL if no data is needed.
@@ -302,43 +293,44 @@ HWND CreateMainToolbar(HWND hwndParent) {
 		return NULL;
 	}
 
-	// Create the image list.
-	g_hImageList = ImageList_Create(
-		bitmapSize, // The with of each image in pixels.
-		bitmapSize, // The height of each image in pixels.
-		ILC_COLOR16 | ILC_MASK, // Ensures transparent background.
-		numButtons, // The number of images that the image list initialy contains.
-		0 // The number of images by which the image list can grow when the system needs to make room for new images.
-	);
-
-	// Set the image list.
-	SendMessage(
-		hwndToolbar, // Handle to the window whose window procedure will recieve the message.
-		TB_SETIMAGELIST, // The message to be sent.
-		(WPARAM)ImageListID, // Additional information - the index of the list.
-		(LPARAM)g_hImageList // Additional information - handle to the image list to set.
-	);
-
-	// Load the button images.
-	SendMessage(hwndToolbar, TB_LOADIMAGES, (WPARAM)IDB_STD_SMALL_COLOR, (LPARAM)HINST_COMMCTRL);
-
-	// Initialize button info.
-	// IDM_NEW, IDM_OPEN, IDM_SAVE are application-defined command constants.
-
-	TBBUTTON tdButtons[numButtons] =
-	{
-		{ MAKELONG(STD_FILENEW, ImageListID), IDM_FILE_NEW, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"New" },
-		{ MAKELONG(STD_FILEOPEN, ImageListID), IDM_FILE_OPEN, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"Open" },
-		{ MAKELONG(STD_FILESAVE, ImageListID), IDM_FILE_SAVEAS, 0, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"Save" }
-	};
-
-	// Add buttons.
+	// Send the TB_BUTTONSTRUCTSIZE message, wich is required for
+	// backward compatibility.
+	// From MSDN: if the toolbar was created using the CreateWindowEx(), you must send the TB_BUTTONSTRUCTSIZE
+	// message to the toolbar before sending TB_ADDBUTTONS.
 	SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-	SendMessage(hwndToolbar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tdButtons);
 
-	// Resize the toolbar, and then show it.
-	SendMessage(hwndToolbar, TB_AUTOSIZE, 0, 0);
-	ShowWindow(hwndToolbar, TRUE);
+	// Structs for buttons and bitmaps.
+	TBBUTTON tbButtons[3];
+	TBADDBITMAP tbAddBitmap;
+
+	// Adds the standart bitmaps to the toolbar, using the imagelist predefined in the common control library.
+	tbAddBitmap.hInst = HINST_COMMCTRL;
+	tbAddBitmap.nID = IDB_STD_SMALL_COLOR;
+	SendMessage(hwndToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbAddBitmap);
+
+	// Adds buttons.
+	ZeroMemory(tbButtons, sizeof(tbButtons));
+	tbButtons[0].iBitmap = STD_FILENEW;
+	tbButtons[0].fsState = TBSTATE_ENABLED;
+	tbButtons[0].fsStyle = TBSTYLE_BUTTON;
+	tbButtons[0].idCommand = IDM_FILE_NEW;
+
+	tbButtons[1].iBitmap = STD_FILEOPEN;
+	tbButtons[1].fsState = TBSTATE_ENABLED;
+	tbButtons[1].fsStyle = TBSTYLE_BUTTON;
+	tbButtons[1].idCommand = IDM_FILE_OPEN;
+
+	tbButtons[2].iBitmap = STD_FILESAVE;
+	tbButtons[2].fsState = TBSTATE_ENABLED;
+	tbButtons[2].fsStyle = TBSTYLE_BUTTON;
+	tbButtons[2].idCommand = IDM_FILE_SAVEAS;
+
+	SendMessage(
+		hwndToolbar, // Handle to the toolbar.
+		TB_ADDBUTTONS, // Adds one or more buttons to a toolbar.
+		sizeof(tbButtons) / sizeof(TBBUTTON), // It's doing a calculation of the number of buttons in the array tbButtons.
+		(LPARAM)&tbButtons
+	);
 
 	return hwndToolbar;
 }
